@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>איזה מותג זה?</title>
+<style>
+  :root {
+    --navy: #0b1f3a;
+    --navy-dark: #071527;
+    --gold: #f7df29;
+    --gold-dark: #d9c000;
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --border: #e2e4e9;
+    --good: #1f8a4c;
+    --bad: #c0392b;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151c;
+      --card: #1c212c;
+      --text: #eef0f3;
+      --muted: #9aa3b2;
+      --border: #2b3140;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12151c;
+    --card: #1c212c;
+    --text: #eef0f3;
+    --muted: #9aa3b2;
+    --border: #2b3140;
+  }
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", Arial, sans-serif;
+    scroll-padding-top: env(safe-area-inset-top, 0px);
+  }
+  * { box-sizing: border-box; }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+  header.top {
+    background: linear-gradient(135deg, var(--navy), var(--navy-dark));
+    color: #fff;
+    padding: 28px 20px;
+    border-radius: 16px;
+    text-align: center;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+  }
+  header.top h1 {
+    margin: 0 0 6px;
+    font-size: 1.5rem;
+  }
+  header.top p {
+    margin: 0;
+    color: var(--gold);
+    font-size: 0.95rem;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .qtype {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--navy-dark);
+    background: var(--gold);
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .qtype { color: #1a1a1a; }
+  }
+  .qprompt {
+    font-size: 1.08rem;
+    font-weight: 600;
+    margin: 0 0 14px;
+    line-height: 1.5;
+  }
+  .options {
+    display: grid;
+    gap: 10px;
+  }
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    font-size: 0.98rem;
+  }
+  .opt:hover { border-color: var(--gold-dark); }
+  .opt.selected {
+    border-color: var(--navy);
+    background: rgba(11,31,58,0.06);
+    font-weight: 600;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .opt.selected { background: rgba(247,223,41,0.12); border-color: var(--gold); }
+  }
+  .opt input { accent-color: var(--navy); width: 18px; height: 18px; }
+  .name-field {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--text);
+  }
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    background: var(--gold);
+    color: var(--navy-dark);
+    cursor: pointer;
+    margin-top: 10px;
+    transition: transform .1s;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn.secondary {
+    background: transparent;
+    border: 1.5px solid var(--navy);
+    color: var(--navy);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .btn.secondary { border-color: var(--gold); color: var(--gold); }
+  }
+  .center { text-align: center; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  .score-big {
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: var(--navy);
+    margin: 6px 0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .score-big { color: var(--gold); }
+  }
+  table.leader {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    overflow-x: auto;
+    display: block;
+  }
+  table.leader th, table.leader td {
+    padding: 10px 8px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.92rem;
+  }
+  table.leader th { color: var(--muted); font-weight: 600; }
+  table.leader tr.me { background: rgba(247,223,41,0.15); font-weight: 700; }
+  .rank-badge {
+    display: inline-block;
+    width: 24px; height: 24px;
+    line-height: 24px;
+    text-align: center;
+    border-radius: 50%;
+    background: var(--navy);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  .top1 { background: #d4af37; color: #1a1a1a; }
+  .top2 { background: #b0b6bd; color: #1a1a1a; }
+  .top3 { background: #cd7f32; color: #1a1a1a; }
+  .loading { text-align: center; padding: 40px 0; color: var(--muted); }
+  .banner {
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: rgba(31,138,76,0.1);
+    border: 1px solid var(--good);
+    color: var(--good);
+    font-weight: 600;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  .qnum { color: var(--muted); font-size: 0.85rem; margin-bottom: 2px; }
+  .timer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .timer-badge {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--navy);
+    background: var(--gold);
+    border-radius: 999px;
+    padding: 4px 14px;
+    min-width: 46px;
+    text-align: center;
+  }
+  .timer-badge.warn { background: var(--bad); color: #fff; }
+  .timer-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .timer-fill {
+    height: 100%;
+    background: var(--gold);
+    transition: width 1s linear, background .3s;
+    width: 100%;
+  }
+  .timer-fill.warn { background: var(--bad); }
+  .opt.correct { border-color: var(--good); background: rgba(31,138,76,0.12); }
+  .opt.wrong { border-color: var(--bad); background: rgba(192,57,43,0.12); }
+  .opt.disabled { pointer-events: none; opacity: 0.85; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header class="top">
+    <h1>🕵️‍♀️ איזה מותג זה?</h1>
+    <p>חידון זיהוי מותגים לעובדי אומניטלקום</p>
+  </header>
+  <div id="content" class="loading">טוען...</div>
+</div>
+
+<script>
+const QUESTIONS = [
+  { type: "סלוגן", prompt: '"Just Do It" — איזה מותג?',
+    options: ["נייקי", "אדידס", "פומה", "ריבוק"], correct: 0 },
+  { type: "סלוגן", prompt: '"I\'m Lovin\' It" — איזה מותג?',
+    options: ["ברגר קינג", "מקדונלד'ס", "KFC", "וונדיז"], correct: 1 },
+  { type: "סלוגן", prompt: '"הכי בבית בעולם" — איזה מותג?',
+    options: ["ישראייר", "ארקיע", "אל על", "סאן דור"], correct: 2 },
+  { type: "סלוגן", prompt: '"תן לאצבעות ללכת במקומך" — איזה מותג?',
+    options: ["בזק", "דפי זהב", "144", "אינטרנט זהב"], correct: 1 },
+  { type: "סלוגן", prompt: '"פשוט להנות מהדרך" — איזה מותג?',
+    options: ["אגד", "דן", "רכבת ישראל", "קווים"], correct: 2 },
+  { type: "סלוגן", prompt: '"___, עד שיגמרו לך המילים" — איזה מותג?',
+    options: ["סלקום", "פלאפון", "פרטנר", "הוט מובייל"], correct: 1 },
+  { type: "סלוגן", prompt: '"אין אין אין כמו ___" — איזה מותג?',
+    options: ["ביסלי", "תפוצ׳יפס", "במבה", "דוריטוס"], correct: 2 },
+  { type: "סלוגן", prompt: '"מה הבעיה? קחו ___" — איזה מותג?',
+    options: ["ניקול", "פיירי", "סנו", "סוד"], correct: 2 },
+  { type: "סלוגן", prompt: '"יש חברים, יש ___" — איזה מותג?',
+    options: ["מכבי", "כללית", "מאוחדת", "לאומית"], correct: 0 },
+  { type: "סלוגן", prompt: '"מים חמים כוס קטנה" — איזה מותג?',
+    options: ["עלית", "וויסוצקי", "יפאורה", "שופרסל"], correct: 0 },
+  { type: "סלוגן", prompt: '"נותנים את הנשמה" — איזה מותג?',
+    options: ["אלדן", "שלמה תחבורה", "כספית", "הרץ"], correct: 0 },
+  { type: "סלוגן", prompt: '"לגדול בידיים טובות" — איזה מותג?',
+    options: ["הופ", "דיסני צ\'אנל", "ערוץ הילדים", "ynet קטן"], correct: 0 },
+  { type: "סלוגן", prompt: '"בגלל המדע" — איזה מותג?',
+    options: ["סימילאק", "מטרנה", "נוטרילון", "בייבי פוד"], correct: 0 },
+  { type: "סלוגן", prompt: '"לגדול בבית ישראלי" — איזה מותג?',
+    options: ["תנובה", "שטראוס", "טרה", "יוטבתה"], correct: 0 },
+  { type: "סלוגן", prompt: '"בטוח שקנית טוב" — איזה מותג?',
+    options: ["שקם אלקטריק", "מחסני חשמל", "קסטרו אלקטריק", "איקאה"], correct: 0 },
+  { type: "סלוגן", prompt: '"אתכם בכל החלטה" — איזה מותג?',
+    options: ["בנק הפועלים", "בנק לאומי", "בנק דיסקונט", "בנק מזרחי טפחות"], correct: 0 },
+  { type: "סלוגן", prompt: '"Think Different" — איזה מותג?',
+    options: ["Apple", "Microsoft", "Samsung", "Google"], correct: 0 },
+  { type: "סלוגן", prompt: '"Impossible is Nothing" — איזה מותג?',
+    options: ["Adidas", "Nike", "Puma", "Reebok"], correct: 0 },
+  { type: "סלוגן", prompt: '"Life\'s Good" — איזה מותג?',
+    options: ["LG", "Samsung", "Sony", "Philips"], correct: 0 },
+  { type: "סלוגן", prompt: '"The Ultimate Driving Machine" — איזה מותג?',
+    options: ["BMW", "Audi", "Mercedes", "Volvo"], correct: 0 },
+  { type: "סלוגן", prompt: '"The Best a Man Can Get" — איזה מותג?',
+    options: ["Gillette", "Braun", "Bic", "Schick"], correct: 0 },
+  { type: "סלוגן", prompt: '"Every Little Helps" — איזה מותג?',
+    options: ["Tesco", "Walmart", "Sainsbury\'s", "Asda"], correct: 0 },
+  { type: "סלוגן", prompt: '"A Diamond is Forever" — איזה מותג?',
+    options: ["De Beers", "Tiffany & Co", "Cartier", "Pandora"], correct: 0 },
+  { type: "סלוגן", prompt: '"It\'s Finger Lickin\' Good" — איזה מותג?',
+    options: ["KFC", "Popeyes", "Church\'s Chicken", "Chick-fil-A"], correct: 0 },
+];
+
+const TOTAL = QUESTIONS.length;
+let myName = "משתתף/ת";
+let answers = new Array(TOTAL).fill(null);
+
+const content = document.getElementById("content");
+
+function renderLoading(msg) {
+  content.innerHTML = `<div class="loading">${msg}</div>`;
+}
+
+function renderStart(alreadyName) {
+  content.innerHTML = `
+    <div class="card center">
+      <p class="muted">שלום ${escapeHtml(alreadyName)} 👋</p>
+      <p>${TOTAL} סלוגנים מוכרים — נחשו לאיזה מותג הם שייכים.</p>
+      <p class="muted">⏱️ לכל שאלה <b>20 שניות בלבד</b> — אם הזמן נגמר, השאלה נספרת כלא נענתה ועוברים הלאה אוטומטית.</p>
+      <p class="muted">⚠️ שימו לב: יש לכם <b>ניסיון אחד בלבד</b>. לאחר השליחה לא ניתן לשחק שוב מאותו מכשיר.</p>
+      <button class="btn" id="startBtn">בואו נתחיל!</button>
+    </div>
+  `;
+  document.getElementById("startBtn").onclick = renderQuiz;
+}
+
+function escapeHtml(s) {
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+const TIME_LIMIT = 20; // seconds per question
+let currentQ = 0;
+let timerInterval = null;
+let questionLocked = false;
+let quizQuestions = []; // shuffled copy used for this attempt
+
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildShuffledQuestions() {
+  const shuffledQs = shuffleArray(QUESTIONS);
+  return shuffledQs.map(q => {
+    const optionIndices = shuffleArray(q.options.map((_, idx) => idx));
+    const newOptions = optionIndices.map(idx => q.options[idx]);
+    const newCorrect = optionIndices.indexOf(q.correct);
+    return { type: q.type, prompt: q.prompt, options: newOptions, correct: newCorrect };
+  });
+}
+
+function renderQuiz() {
+  currentQ = 0;
+  quizQuestions = buildShuffledQuestions();
+  answers = new Array(TOTAL).fill(null);
+  renderQuestion(0);
+}
+
+function clearTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function renderQuestion(i) {
+  clearTimer();
+  questionLocked = false;
+  const q = quizQuestions[i];
+  const html = `
+    <div class="card">
+      <div class="qnum">שאלה ${i+1} מתוך ${TOTAL}</div>
+      <div class="timer-row" style="justify-content:flex-end;">
+        <span class="timer-badge" id="timerBadge">${TIME_LIMIT}</span>
+      </div>
+      <div class="timer-track"><div class="timer-fill" id="timerFill"></div></div>
+      <p class="qprompt">${q.prompt}</p>
+      <div class="options" id="optsGroup">
+        ${q.options.map((opt, oi) => `
+          <label class="opt" data-oi="${oi}">
+            <input type="radio" name="q${i}" value="${oi}">
+            <span>${opt}</span>
+          </label>
+        `).join("")}
+      </div>
+    </div>
+  `;
+  content.innerHTML = html;
+
+  const optsGroup = document.getElementById("optsGroup");
+  optsGroup.querySelectorAll(".opt").forEach(optEl => {
+    optEl.addEventListener("click", () => {
+      if (questionLocked) return;
+      answers[i] = parseInt(optEl.dataset.oi, 10);
+      lockQuestion(i, optEl);
+    });
+  });
+
+  let timeLeft = TIME_LIMIT;
+  const badge = document.getElementById("timerBadge");
+  const fill = document.getElementById("timerFill");
+  timerInterval = setInterval(() => {
+    timeLeft -= 1;
+    badge.textContent = timeLeft;
+    fill.style.width = `${(timeLeft / TIME_LIMIT) * 100}%`;
+    if (timeLeft <= 5) {
+      badge.classList.add("warn");
+      fill.classList.add("warn");
+    }
+    if (timeLeft <= 0) {
+      clearTimer();
+      if (!questionLocked) {
+        lockQuestion(i, null); // time's up, no answer selected
+      }
+    }
+  }, 1000);
+}
+
+function lockQuestion(i, selectedEl) {
+  questionLocked = true;
+  clearTimer();
+  const optsGroup = document.getElementById("optsGroup");
+  optsGroup.querySelectorAll(".opt").forEach(o => o.classList.add("disabled"));
+  if (selectedEl) selectedEl.classList.add("selected");
+
+  setTimeout(() => {
+    if (i + 1 < TOTAL) {
+      currentQ = i + 1;
+      renderQuestion(currentQ);
+    } else {
+      submitQuiz();
+    }
+  }, 450);
+}
+
+async function submitQuiz() {
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.textContent = "שולח...";
+
+  let score = 0;
+  quizQuestions.forEach((q, i) => { if (answers[i] === q.correct) score++; });
+
+  const record = {
+    name: myName,
+    score: score,
+    total: TOTAL,
+    timestamp: Date.now()
+  };
+
+  try {
+    localStorage.setItem("brandquiz_result", JSON.stringify(record));
+    localStorage.setItem("brandquiz_done", "1");
+  } catch (e) {}
+
+  renderResult(record, true);
+}
+
+function shareText(record) {
+  return `השלמתי את חידון "איזה מותג זה?" 🕵️‍♀️\nשם: ${record.name}\nניקוד: ${record.score} מתוך ${record.total}`;
+}
+
+function renderResult(record, justSubmitted) {
+  const text = shareText(record);
+  const waLink = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  const mailLink = `mailto:?subject=${encodeURIComponent('תוצאת חידון איזה מותג זה')}&body=${encodeURIComponent(text)}`;
+  content.innerHTML = `
+    <div class="card center">
+      ${justSubmitted ? `<div class="banner">סיימתם בהצלחה! ✅</div>` : `<p class="muted">כבר השתתפת בחידון הזה, ${escapeHtml(record.name)} 👋</p>`}
+      <p class="muted">הניקוד שלך:</p>
+      <div class="score-big">${record.score} / ${record.total}</div>
+      <p class="muted">לא ניתן לשחק שוב מאותו מכשיר/דפדפן — בהצלחה לכולם! 🎉</p>
+      <p class="muted" style="margin-top:16px;">רוצים שהתוצאה שלכם תיספר? שלחו אותה למי שמארגן/ת את התחרות:</p>
+      <a class="btn" style="text-decoration:none; display:block;" href="${waLink}" target="_blank" rel="noopener">📲 שליחה בוואטסאפ</a>
+      <a class="btn secondary" style="text-decoration:none; display:block; margin-top:8px;" href="${mailLink}">✉️ שליחה במייל</a>
+      <button class="btn secondary" id="copyResultBtn" style="margin-top:8px;">📋 העתקת התוצאה</button>
+    </div>
+  `;
+  const copyBtn = document.getElementById("copyResultBtn");
+  if (copyBtn) {
+    copyBtn.onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(text);
+        copyBtn.textContent = "הועתק! ✓";
+        setTimeout(() => { copyBtn.textContent = "📋 העתקת התוצאה"; }, 1800);
+      } catch (e) {
+        copyBtn.textContent = "לא ניתן להעתיק כאן";
+      }
+    };
+  }
+}
+
+function init() {
+  renderLoading("טוען...");
+
+  try {
+    if (localStorage.getItem("brandquiz_done") === "1") {
+      const rec = JSON.parse(localStorage.getItem("brandquiz_result") || "{}");
+      renderResult(rec, false);
+      return;
+    }
+  } catch (e) {}
+
+  content.innerHTML = `
+    <div class="card center">
+      <p>לפני שמתחילים, איך קוראים לכם?</p>
+      <input class="name-field" id="nameInput" placeholder="שם מלא" />
+      <button class="btn" id="nameBtn" style="margin-top:14px;">המשך</button>
+    </div>
+  `;
+  document.getElementById("nameBtn").onclick = () => {
+    const val = document.getElementById("nameInput").value.trim();
+    if (!val) return;
+    myName = val;
+    renderStart(myName);
+  };
+}
+
+init();
+</script>
+</body>
+</html>
