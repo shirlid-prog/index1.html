@@ -290,20 +290,12 @@ const QUESTIONS = [
     options: ["בנק הפועלים", "בנק לאומי", "בנק דיסקונט", "בנק מזרחי טפחות"], correct: 0 },
   { type: "סלוגן", prompt: '"Think Different" — איזה מותג?',
     options: ["Apple", "Microsoft", "Samsung", "Google"], correct: 0 },
-  { type: "סלוגן", prompt: '"Impossible is Nothing" — איזה מותג?',
-    options: ["Adidas", "Nike", "Puma", "Reebok"], correct: 0 },
   { type: "סלוגן", prompt: '"Life\'s Good" — איזה מותג?',
     options: ["LG", "Samsung", "Sony", "Philips"], correct: 0 },
-  { type: "סלוגן", prompt: '"The Ultimate Driving Machine" — איזה מותג?',
-    options: ["BMW", "Audi", "Mercedes", "Volvo"], correct: 0 },
   { type: "סלוגן", prompt: '"The Best a Man Can Get" — איזה מותג?',
     options: ["Gillette", "Braun", "Bic", "Schick"], correct: 0 },
-  { type: "סלוגן", prompt: '"Every Little Helps" — איזה מותג?',
-    options: ["Tesco", "Walmart", "Sainsbury\'s", "Asda"], correct: 0 },
-  { type: "סלוגן", prompt: '"A Diamond is Forever" — איזה מותג?',
-    options: ["De Beers", "Tiffany & Co", "Cartier", "Pandora"], correct: 0 },
-  { type: "סלוגן", prompt: '"It\'s Finger Lickin\' Good" — איזה מותג?',
-    options: ["KFC", "Popeyes", "Church\'s Chicken", "Chick-fil-A"], correct: 0 },
+  { type: "סלוגן", prompt: '"Taste the Feeling" — איזה מותג?',
+    options: ["Pepsi", "Coca-Cola", "Sprite", "Fanta"], correct: 1 },
 ];
 
 const TOTAL = QUESTIONS.length;
@@ -445,10 +437,6 @@ function lockQuestion(i, selectedEl) {
 }
 
 async function submitQuiz() {
-  const btn = document.getElementById("submitBtn");
-  btn.disabled = true;
-  btn.textContent = "שולח...";
-
   let score = 0;
   quizQuestions.forEach((q, i) => { if (answers[i] === q.correct) score++; });
 
@@ -463,6 +451,20 @@ async function submitQuiz() {
     localStorage.setItem("brandquiz_result", JSON.stringify(record));
     localStorage.setItem("brandquiz_done", "1");
   } catch (e) {}
+
+  // Send result to Google Form (fire-and-forget; no-cors means we can't read
+  // the response, but the submission still goes through).
+  try {
+    const formData = new URLSearchParams();
+    formData.append("entry.321472678", record.name);
+    formData.append("entry.1394826480", `${record.score}/${record.total}`);
+    fetch(
+      "https://docs.google.com/forms/d/e/1FAIpQLSca1GF75n3U0Fx2Ha7jS96Wr7_yu0Ayuuad_b3VS5ftbGHrsg/formResponse",
+      { method: "POST", mode: "no-cors", body: formData }
+    );
+  } catch (e) {
+    // Silently ignore - local result still shows to the participant.
+  }
 
   renderResult(record, true);
 }
